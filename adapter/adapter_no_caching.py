@@ -24,14 +24,19 @@ class Rectange(list):
         self.append(Line(Point(x, y + height), Point(x + width, y + height))) 
 
 
-class LineToPintAdapter(list):
-    count = 0
+class LineToPointAdapter:
+    
+    cache = {}
 
     def __init__(self, line):
-        super().__init__()
-        self.count += 1
+        self.h = hash(line)
+        if self.h in self.cache:
+            return
 
-        print(f'{self.count}: Generating points for line '
+        super().__init__()
+        
+
+        print(f'Generating points for line '
               f'[{line.start.x}, {line.start.y}]->'
               f'[{line.end.x}, {line.end.y}]')
 
@@ -40,18 +45,25 @@ class LineToPintAdapter(list):
         top = min(line.start.y, line.end.y)
         bottom= min(line.start.y, line.end.y)   
 
+        points = []
+
         if right - left == 0:
             for y in range(top, bottom):
-                self.append(Point(left, y))
+                points.append(Point(left, y))
         elif line.end.y - line.start.y == 0:
             for x in range (left, right):
-                self.append(Point(x, top))           
+                points.append(Point(x, top))    
+
+        self.cache[self.h] = points
+
+    def __iter__(self):
+        return iter(self.cache[self.h])                   
 
 def draw(rcs):
     print('\n\n--- Drawing some stuff --\n')
     for rc in rcs:
         for line in rc:
-            adapter = LineToPintAdapter(line)
+            adapter = LineToPointAdapter(line)
             for p in adapter:
                 draw_point(p)
 
