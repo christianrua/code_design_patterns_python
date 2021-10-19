@@ -6,7 +6,7 @@ class User:
         self.name = name
 
 class User2:
-    string = []
+    strings = []
 
     def __init__(self, full_name):
         def get_or_add(s):
@@ -19,12 +19,12 @@ class User2:
         self.names = [get_or_add(x) for x in full_name.split(' ')]   
 
     def __str__(self):
-        ''.join([self.strings[x] for x in self.names])         
+        return ' '.join([self.strings[x] for x in self.names])         
 
 def random_string():
     chars = string.ascii_lowercase
     return ''.join(
-        [random.choise(chars) for x in range(8)]
+        [random.choice(chars) for x in range(8)]
     )
 
 if __name__ == '__main__':
@@ -35,5 +35,7 @@ if __name__ == '__main__':
 
     for first in first_names:
         for last in last_names:
-            users.append(User(f'{first} {last}'))
+            users.append(User2(f'{first} {last}'))
+
+    print(users[0])        
 

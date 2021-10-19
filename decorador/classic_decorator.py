@@ -31,8 +31,7 @@ class ColoredShape(Shape):
 
 class TransparentShape(Shape):
     def __init__(self, shape, transparency):
-        if isinstance(shape, ColoredShape):
-            raise Exception('Cannot apply same decorator twice')
+        
         self.shape = shape
         self.transparency = transparency
 
