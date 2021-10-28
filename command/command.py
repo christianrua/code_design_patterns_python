@@ -1,6 +1,7 @@
 
 from abc import ABC
 from enum import Enum
+import unittest
 
 class BanKAccount:
     OVERDRAFT_LIMIT = -500
@@ -25,6 +26,10 @@ class BanKAccount:
 
 
 class Command(ABC):
+
+    def __init__(self):
+        self.success = False
+
     def invoke(self):
         pass
 
@@ -38,10 +43,11 @@ class BankAccountCommand(Command):
         WITDRAW = 1
 
     def __init__(self, account, action, amount):
+        super().__init__()
         self.account = account
         self.action = action
         self.amount = amount
-        self.success = None
+        
 
     def invoke(self):
         if self.action == self.Action.DEPOSIT:
@@ -60,21 +66,91 @@ class BankAccountCommand(Command):
         elif self.action == self.Action.WITDRAW:
              self.account.deposit(self.amount)           
 
+
+
+class CompositeBanckAccountCommand(Command, list):
+    def __init__(self, items=[]):
+        super().__init__()
+        for i in items:
+            self.append(i)
+
+    def invoke(self):
+        for x in self:
+            x.invoke()
+
+    def undo(self):
+        for x in reversed(self):
+            x.undo()                    
+
+class MoneyTransferCommand(CompositeBanckAccountCommand):
+    def __init__(self, from_acct, to_acct, amount):
+        super().__init__([
+            BankAccountCommand(from_acct,
+            BankAccountCommand.Action.WITDRAW,
+            amount),
+        BankAccountCommand(to_acct,
+        BankAccountCommand.Action.DEPOSIT,
+        amount)    
+        ])
+
+    def invoke(self):
+        ok = True
+        for cmd in self:
+            if ok:
+                cmd.invoke()
+                ok = cmd.success
+            else:
+                cmd.success = False  
+        self.success = ok              
+
+class TestSuite(unittest.TestCase):
+    # def test_composite_deposit(self):
+    #     ba = BanKAccount()
+    #     deposit1 = BankAccountCommand(
+    #         ba, BankAccountCommand.Action.DEPOSIT, 100
+    #     )
+    #     deposit2 = BankAccountCommand(
+    #         ba, BankAccountCommand.Action.DEPOSIT, 50
+    #     )
+    #     composite = CompositeBanckAccountCommand(
+    #         [deposit1, deposit2]
+    #     )
+    #     composite.invoke()
+    #     print(ba)
+    #     composite.undo()
+    #     print(ba)
+
+    # def test_transfer_fail(self):
+    #     ba1 = BanKAccount(100)
+    #     ba2 = BanKAccount()
+
+    #     amount = 1000
+    #     wc = BankAccountCommand(
+    #         ba1, BankAccountCommand.Action.WITDRAW, amount
+    #     )
+    #     dc = BankAccountCommand(
+    #         ba2, BankAccountCommand.Action.DEPOSIT, amount
+    #     )
+
+    #     transfer = CompositeBanckAccountCommand([wc, dc])
+
+    #     transfer.invoke()
+    #     print(f'ba1; {ba1}, ba2: {ba2}')
+    #     transfer.undo()
+    #     print(f'ba1; {ba1}, ba2: {ba2}')
+    def test_better_transfer(self):
+        ba1 = BanKAccount(100)
+        ba2 = BanKAccount()
+
+        amount = 1000
+        transfer = MoneyTransferCommand(ba1, ba2, amount)
+        transfer.invoke()
+        print(f'ba1; {ba1}, ba2: {ba2}')
+        transfer.undo()
+        print(f'ba1; {ba1}, ba2: {ba2}')
+        print(transfer.success)
+
+    
+
 if __name__ == '__main__':
-    ba = BanKAccount()  
-    cmd = BankAccountCommand(
-        ba, BankAccountCommand.Action.DEPOSIT, 100
-    )                  
-    cmd.invoke()
-    print(f'After $100 deposit: {ba}')
-
-    cmd.undo()
-    print(f'$100 deposit undone: {ba}')
-
-    illegal_cmd = BankAccountCommand(
-        ba, BankAccountCommand.Action.WITDRAW, 1000
-    )
-    illegal_cmd.invoke()
-    print(f'After impossible withdrawal: {ba}')
-    illegal_cmd.undo()
-    print(f'After undo: {ba}')
+    unittest.main()
