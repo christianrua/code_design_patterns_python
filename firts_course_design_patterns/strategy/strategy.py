@@ -1,3 +1,4 @@
+
 from abc import ABC
 from enum import Enum, auto
 
@@ -27,12 +28,12 @@ class OutputFormat(Enum):
     HTML = auto()
 
 class TextProcessor:
-    def __init__(self, list_strategy=HtmlListStrategy):
+    def __init__(self, list_strategy=HtmlListStrategy()):
         self.buffer = []
-        self.list_strategy = list_strategy()
+        self.list_strategy = list_strategy
 
     def append_list(self, items):
-        ls = self.list_strategy
+        ls = self.list_strategy 
         ls.start(self.buffer)
         for item in items:
             ls.add_list_item(self.buffer, item)
@@ -40,7 +41,7 @@ class TextProcessor:
 
     def set_output_format(self, format):
         if format == OutputFormat.MARKDOWN:
-            self.list_strategy = MarkdownListStrategy
+            self.list_strategy = MarkdownListStrategy()
         elif format == OutputFormat.HTML:
             self.list_strategy = HtmlListStrategy()  
 
@@ -57,3 +58,8 @@ if __name__ == '__main__':
         tp.set_output_format(OutputFormat.MARKDOWN)
         tp.append_list(items)         
         print(tp)            
+
+        tp.set_output_format(OutputFormat.HTML)
+        tp.clear()
+        tp.append_list(items)
+        print(tp)
